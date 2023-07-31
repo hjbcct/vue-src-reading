@@ -130,11 +130,18 @@ export default class Watcher implements DepTarget {
   /**
    * Evaluate the getter, and re-collect dependencies.
    */
+  //  get方法进行的是一个初始化操作
+  //  之后如果数据发生变化，触发watcher.update方法，而update又会触发watcher.get方法，进而再次运行render这一观察者函数，实现视图更新
   get() {
+    //  1.  将this（watch）赋值给Dep.target
+    //  2.  清空newDeps newDepsId
     pushTarget(this)
     let value
     const vm = this.vm
     try {
+      //  执行观察者函数，开始计算
+      //  这一步执行了defineReactive，计算过程中，就会触发getter
+      //  getter会执行watcher的addDep()方法，将数据记为依赖，也就是把这个数据的dep存入newDepIds、newDeps中
       value = this.getter.call(vm, vm)
     } catch (e: any) {
       if (this.user) {
@@ -159,6 +166,9 @@ export default class Watcher implements DepTarget {
    */
   addDep(dep: Dep) {
     const id = dep.id
+    //  这里还有一个去重的操作
+    //  一次计算可能有数据被重复访问，如 a * a，数据a被访问两次
+    //  因此，我们希望同一依赖只被收集一次，使用id去重
     if (!this.newDepIds.has(id)) {
       this.newDepIds.add(id)
       this.newDeps.push(dep)
