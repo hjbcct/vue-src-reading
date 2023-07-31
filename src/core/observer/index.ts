@@ -101,11 +101,14 @@ export class Observer {
  * returns the new observer if successfully observed,
  * or the existing observer if the value already has one.
  */
+// 我们将整个data都传入observe
+// const ob = observe(data)
 export function observe(
   value: any,
   shallow?: boolean,
   ssrMockReactivity?: boolean
 ): Observer | void {
+  // 如果data已经被监听，有__ob__属性，则直接返回这个observer
   if (value && hasOwn(value, '__ob__') && value.__ob__ instanceof Observer) {
     return value.__ob__
   }

@@ -39,6 +39,10 @@ const sharedPropertyDefinition = {
   set: noop
 }
 
+// 这样，当对target[key]进行读取或赋值操作时，实际上是对target[sourceKey][key]进行操作。
+// 这种代理可以方便地对对象的属性进行访问和修改。
+// 例如，修改vm._data.name时，实际上也可以直接修改vm.name，这个修改会映射到vm._data.name
+// 因此，我们在vm实例中，可以直接写作this.name获取data中的name数据，而不用写this.data.name
 export function proxy(target: Object, sourceKey: string, key: string) {
   sharedPropertyDefinition.get = function proxyGetter() {
     return this[sourceKey][key]
@@ -133,24 +137,28 @@ function initData(vm: Component) {
   }
   // proxy data on instance
   const keys = Object.keys(data)
-  const props = vm.$options.props
-  const methods = vm.$options.methods
+  // const props = vm.$options.props
+  // const methods = vm.$options.methods
   let i = keys.length
   while (i--) {
+    // key是vm.data中所有字段
     const key = keys[i]
-    if (__DEV__) {
-      if (methods && hasOwn(methods, key)) {
-        warn(`Method "${key}" has already been defined as a data property.`, vm)
-      }
-    }
-    if (props && hasOwn(props, key)) {
-      __DEV__ &&
-        warn(
-          `The data property "${key}" is already declared as a prop. ` +
-            `Use prop default value instead.`,
-          vm
-        )
-    } else if (!isReserved(key)) {
+    // if (__DEV__) {
+    //   if (methods && hasOwn(methods, key)) {
+    //     warn(`Method "${key}" has already been defined as a data property.`, vm)
+    //   }
+    // }
+    // if (props && hasOwn(props, key)) {
+    //   __DEV__ &&
+    //     warn(
+    //       `The data property "${key}" is already declared as a prop. ` +
+    //         `Use prop default value instead.`,
+    //       vm
+    //     )
+    // } else
+    //  如果key不是以_开头，即不是保留字，则需要proxy
+    // 以 _ 或 $ 开头的 property 不会被组件实例代理，因为它们可能和 Vue 内置的 property、API 方法冲突。
+    if (!isReserved(key)) {
       proxy(vm, `_data`, key)
     }
   }
