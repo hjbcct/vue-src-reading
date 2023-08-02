@@ -45,6 +45,8 @@ const mockDep = {
  * object's property keys into getter/setters that
  * collect dependencies and dispatch updates.
  */
+
+// Observer 劫持并监听所有属性，一个Data对应一个Observer
 export class Observer {
   dep: Dep
   vmCount: number // number of vms that have this object as root $data
@@ -53,7 +55,9 @@ export class Observer {
     // this.value = value
     this.dep = mock ? mockDep : new Dep()
     this.vmCount = 0
-    def(value, '__ob__', this)
+
+    def(value, '__ob__', this)      // => data.__ob__ = this
+    // value即data，data的类型一般为Plain Object，可以暂时忽略Array
     if (isArray(value)) {
       if (!mock) {
         if (hasProto) {
@@ -76,6 +80,7 @@ export class Observer {
        * getter/setters. This method should only be called when
        * value type is Object.
        */
+      // 如果不是数组，data就是Object类型，遍历data中的所有属性，加入响应式
       const keys = Object.keys(value)
       for (let i = 0; i < keys.length; i++) {
         const key = keys[i]
@@ -121,6 +126,7 @@ export function observe(
     !isRef(value) &&
     !(value instanceof VNode)
   ) {
+    // 把整个data传入，创建一个Observer
     return new Observer(value, shallow, ssrMockReactivity)
   }
 }
@@ -136,6 +142,7 @@ export function defineReactive(
   shallow?: boolean,
   mock?: boolean
 ) {
+  // data中的一个属性对应一个dep
   const dep = new Dep()
 
   const property = Object.getOwnPropertyDescriptor(obj, key)

@@ -90,6 +90,8 @@ function initProps(vm: Component, propsOptions: Object) {
     /* istanbul ignore else */
     if (__DEV__) {
       const hyphenatedKey = hyphenate(key)
+
+      // ref / is / slot 是vue的保留字段，不能作为组件的属性名
       if (
         isReservedAttribute(hyphenatedKey) ||
         config.isReservedAttr(hyphenatedKey)
@@ -125,6 +127,9 @@ function initProps(vm: Component, propsOptions: Object) {
 
 function initData(vm: Component) {
   let data: any = vm.$options.data
+  // data初始化，这里的data有可能是function（也是推荐的写法），在这里会运行data函数，获得function返回值
+  // 注意，这里的vm对应一个组件，而同一个vm可能有多个实例，即初始化多次，我们希望每个实例都有一个独立的变量空间
+  // 因此，data一般为函数，在每次初始化创建一个新的data，避免不同实例之间共用同一个data
   data = vm._data = isFunction(data) ? getData(data, vm) : data || {}
   if (!isPlainObject(data)) {
     data = {}
@@ -163,6 +168,7 @@ function initData(vm: Component) {
     }
   }
   // observe data
+  // 为data创建一个Observer
   const ob = observe(data)
   ob && ob.vmCount++
 }

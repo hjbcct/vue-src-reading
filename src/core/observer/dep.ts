@@ -68,6 +68,7 @@ export default class Dep {
     }
   }
 
+  // 通知subs订阅队列中所有watcher更新
   notify(info?: DebuggerEventExtraInfo) {
     // stabilize the subscriber list first
     const subs = this.subs.filter(s => s) as DepTarget[]

@@ -203,6 +203,7 @@ export default class Watcher implements DepTarget {
    * Subscriber interface.
    * Will be called when a dependency changes.
    */
+  // 当数据发生修改时，dep通知watcher update
   update() {
     /* istanbul ignore else */
     if (this.lazy) {
