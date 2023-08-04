@@ -31,7 +31,7 @@ export interface DepTarget extends DebuggerOptions {
 export default class Dep {
   static target?: DepTarget | null
   id: number
-  subs: Array<DepTarget | null>
+  subs: Array<DepTarget | null>   //  订阅队列
   // pending subs cleanup
   _pending = false
 
@@ -56,7 +56,8 @@ export default class Dep {
     }
   }
 
-  depend(info?: DebuggerEventExtraInfo) {
+  // 在get操作时触发，将this（dep）加入到当前执行的观察者（watcher）中
+  depend(info?: DebuggerEventExtraInfo){
     if (Dep.target) {
       Dep.target.addDep(this)
       if (__DEV__ && info && Dep.target.onTrack) {
@@ -68,7 +69,7 @@ export default class Dep {
     }
   }
 
-  // 通知subs订阅队列中所有watcher更新
+  // 在set操作时触发，通知subs订阅队列中所有watcher更新
   notify(info?: DebuggerEventExtraInfo) {
     // stabilize the subscriber list first
     const subs = this.subs.filter(s => s) as DepTarget[]

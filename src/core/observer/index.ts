@@ -174,6 +174,8 @@ export function defineReactive(
             key
           })
         } else {
+          // 把dep加入当前执行的watcher中
+          // Dep.target 中就是当前执行的watcher，get方法也是只会由于watcher对应的表达式使用了数据，进而触发render
           dep.depend()
         }
         if (childOb) {

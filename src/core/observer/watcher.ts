@@ -133,16 +133,23 @@ export default class Watcher implements DepTarget {
   //  get方法进行的是一个初始化操作
   //  之后如果数据发生变化，触发watcher.update方法，而update又会触发watcher.get方法，进而再次运行render这一观察者函数，实现视图更新
   get() {
-    //  1.  将this（watch）赋值给Dep.target
+    ///////////////////////////
+    //  1.  将this（watch）赋值给Dep.target, 表示当前执行的观察者函数
     //  2.  清空newDeps newDepsId
     pushTarget(this)
+    ///////////////////////////
     let value
     const vm = this.vm
     try {
-      //  执行观察者函数，开始计算
-      //  这一步执行了defineReactive，计算过程中，就会触发getter
-      //  getter会执行watcher的addDep()方法，将数据记为依赖，也就是把这个数据的dep存入newDepIds、newDeps中
+    ///////////////////////////
+    //  执行观察者函数，开始计算
+    //  如果某个观察者函数访问了某个数据，我们就可以把这个观察者函数认为是依赖这个数据的：
+    //  这一步执行了defineReactive，计算过程中，就会触发getter，表明这个观察者函数访问了某个数据
+    //  这里的getter是一个函数或者经expression提取得到的函数，调用会触发数据的get方法
+    //  getter会执行watcher的addDep()方法，将数据记为依赖，也就是把这个数据的dep存入newDepIds、newDeps中
+    ///////////////////////////
       value = this.getter.call(vm, vm)
+
     } catch (e: any) {
       if (this.user) {
         handleError(e, vm, `getter for watcher "${this.expression}"`)
@@ -155,9 +162,16 @@ export default class Watcher implements DepTarget {
       if (this.deep) {
         traverse(value)
       }
+    ///////////////////////////
+    // 进行事后清理工作，首先释放Dep.target，
+    // 然后拿newDeps和deps进行对比，接着进行以下的处理： 
+    // - newDeps里不存在，deps里存在的数据，表示是过期的缓存数据。相应的，从数据对应的dep.subs移除掉当前watcher 
+    // - 将newDeps赋给deps，表示缓存本轮的计算结果，这样子下轮计算如果再依赖同一个数据，就不需要再收集了
+    ///////////////////////////
       popTarget()
       this.cleanupDeps()
     }
+    // 返回watcher对应表达式的值
     return value
   }
 
@@ -172,6 +186,8 @@ export default class Watcher implements DepTarget {
     if (!this.newDepIds.has(id)) {
       this.newDepIds.add(id)
       this.newDeps.push(dep)
+      // 查看这个依赖是否在depIds中有
+      // 由于这一逻辑，不存在：”deps中不存在但newDeps存在“的情况
       if (!this.depIds.has(id)) {
         dep.addSub(this)
       }
@@ -189,10 +205,12 @@ export default class Watcher implements DepTarget {
         dep.removeSub(this)
       }
     }
+    // 交换depIds和newDepIds，并清空newDepIds
     let tmp: any = this.depIds
     this.depIds = this.newDepIds
     this.newDepIds = tmp
     this.newDepIds.clear()
+    // 交换deps和newDeps，并清空depIds
     tmp = this.deps
     this.deps = this.newDeps
     this.newDeps = tmp
@@ -243,6 +261,7 @@ export default class Watcher implements DepTarget {
             info
           )
         } else {
+          // 触发用户定义的回调函数（如watch和computed），或触发视图更新（模板）
           this.cb.call(this.vm, value, oldValue)
         }
       }
