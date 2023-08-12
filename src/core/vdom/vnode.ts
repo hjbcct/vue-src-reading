@@ -46,23 +46,25 @@ export default class VNode {
     asyncFactory?: Function
   ) {
     this.tag = tag
-    this.data = data
-    this.children = children
+    this.data =
+      data /*当前节点对应的对象，包含了具体的一些数据信息，是一个VNodeData类型，可以参考VNodeData类型中的数据信息*/
+    this.children = children /*当前节点的子节点，是一个数组*/
     this.text = text
-    this.elm = elm
+    this.elm = elm /*当前虚拟节点对应的真实dom节点*/
     this.ns = undefined
-    this.context = context
-    this.fnContext = undefined
+    this.context = context /*当前组件节点对应的Vue实例*/
+    this.fnContext = undefined /*函数式组件对应的Vue实例*/
     this.fnOptions = undefined
     this.fnScopeId = undefined
     this.key = data && data.key
     this.componentOptions = componentOptions
     this.componentInstance = undefined
     this.parent = undefined
-    this.raw = false
+    this.raw =
+      false /*简而言之就是是否为原生HTML或只是普通文本，innerHTML的时候为true，textContent的时候为false*/
     this.isStatic = false
     this.isRootInsert = true
-    this.isComment = false
+    this.isComment = false /*是否为注释节点*/
     this.isCloned = false
     this.isOnce = false
     this.asyncFactory = asyncFactory

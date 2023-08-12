@@ -51,26 +51,31 @@ export class Observer {
   dep: Dep
   vmCount: number // number of vms that have this object as root $data
 
+  // Observer的构造函数
   constructor(public value: any, public shallow = false, public mock = false) {
     // this.value = value
     this.dep = mock ? mockDep : new Dep()
     this.vmCount = 0
 
-    def(value, '__ob__', this)      // => data.__ob__ = this
-    // value即data，data的类型一般为Plain Object，可以暂时忽略Array
+    def(value, '__ob__', this) // => data.__ob__ = this
+    // 如果value是数组类型
     if (isArray(value)) {
       if (!mock) {
+        // 判断浏览器是否支持prototype
         if (hasProto) {
+          // 将value的原型转为我们自己定义的数组拦截器arrayMethods
           /* eslint-disable no-proto */
           ;(value as any).__proto__ = arrayMethods
           /* eslint-enable no-proto */
         } else {
+          // 如果浏览器不支持prototype，就直接把数组类型的方法直接替换为我们的方法
           for (let i = 0, l = arrayKeys.length; i < l; i++) {
             const key = arrayKeys[i]
             def(value, key, arrayMethods[key])
           }
         }
       }
+      // 还需要监听数组内的对象
       if (!shallow) {
         this.observeArray(value)
       }
@@ -80,7 +85,8 @@ export class Observer {
        * getter/setters. This method should only be called when
        * value type is Object.
        */
-      // 如果不是数组，data就是Object类型，遍历data中的所有属性，加入响应式
+      // 如果不是数组，val就是Object类型，遍历val中的所有属性，加入响应式
+      // 在初始化data时，data被传入observe，显然data就是object，因此直接开始遍历data，为data的每个属性添加getter/setter拦截器
       const keys = Object.keys(value)
       for (let i = 0; i < keys.length; i++) {
         const key = keys[i]
@@ -106,7 +112,7 @@ export class Observer {
  * returns the new observer if successfully observed,
  * or the existing observer if the value already has one.
  */
-// 我们将整个data都传入observe
+// data传入observe
 // const ob = observe(data)
 export function observe(
   value: any,
